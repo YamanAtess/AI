@@ -1,0 +1,90 @@
+import requests
+import json
+from datetime import datetime
+
+# OpenWeatherMap API anahtarınız
+API_KEY = 'YOUR_API_KEY'
+BASE_URL = "http://api.openweathermap.org/data/2.5/weather?"
+
+# Hava durumu bilgisini al
+def get_weather(city):
+    url = f"{BASE_URL}q={city}&appid={API_KEY}&units=metric&lang=tr"
+    
+    response = requests.get(url)
+    data = response.json()
+
+    # API yanıtında hata kontrolü
+    if data['cod'] != 200:
+        print("Hata: Şehir bulunamadı.")
+        return None
+    return data
+
+# Hava durumu bilgisini ekrana yazdır
+def display_weather(data):
+    city = data['name']
+    country = data['sys']['country']
+    weather_desc = data['weather'][0]['description']
+    temp = data['main']['temp']
+    humidity = data['main']['humidity']
+    wind_speed = data['wind']['speed']
+    pressure = data['main']['pressure']
+    sunrise = datetime.utcfromtimestamp(data['sys']['sunrise']).strftime('%H:%M:%S')
+    sunset = datetime.utcfromtimestamp(data['sys']['sunset']).strftime('%H:%M:%S')
+    
+    print(f"\n{city}, {country} Hava Durumu:")
+    print(f"Açıklama: {weather_desc.capitalize()}")
+    print(f"Sıcaklık: {temp}°C")
+    print(f"Nem: {humidity}%")
+    print(f"Rüzgar Hızı: {wind_speed} m/s")
+    print(f"Basınç: {pressure} hPa")
+    print(f"Gün Doğumu: {sunrise}")
+    print(f"Gün Batımı: {sunset}")
+
+# Saatlik hava durumu tahmini
+def hourly_forecast(city):
+    url = f"{BASE_URL}q={city}&appid={API_KEY}&units=metric&lang=tr"
+    response = requests.get(url)
+    data = response.json()
+    
+    if data['cod'] != 200:
+        print("Hata: Şehir bulunamadı.")
+        return None
+    
+    print(f"\n{city} İçin Saatlik Hava Durumu:")
+    
+    # Saatlik tahmin verilerini al
+    for hour in range(1, 13):
+        # Örnek saatlik veri
+        temp = data['main']['temp']
+        description = data['weather'][0]['description']
+        print(f"Saat {hour}:00 - {temp}°C, {description.capitalize()}")
+
+# Ana menü
+def main():
+    print("Hava Durumu Uygulaması")
+    print("1. Şehir için hava durumu")
+    print("2. Saatlik hava durumu")
+    print("3. Çıkış")
+    
+    while True:
+        choice = input("Bir seçenek girin (1/2/3): ")
+        
+        if choice == '1':
+            city = input("Hava durumu almak istediğiniz şehri girin: ")
+            data = get_weather(city)
+            if data:
+                display_weather(data)
+        
+        elif choice == '2':
+            city = input("Saatlik hava durumu almak istediğiniz şehri girin: ")
+            hourly_forecast(city)
+        
+        elif choice == '3':
+            print("Çıkılıyor...")
+            break
+        
+        else:
+            print("Geçersiz seçim. Lütfen tekrar deneyin.")
+
+if __name__ == "__main__":
+    main()
